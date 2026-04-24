@@ -125,7 +125,7 @@ public partial class SettingsViewModel : ObservableObject, IDisposable
 
             // 选择模型
             var model = _settings.Model.Trim();
-            model = string.IsNullOrEmpty(model) ? "deepseek-chat" : model;
+            model = string.IsNullOrEmpty(model) ? "deepseek-v4-flash" : model;
 
             // 替换Prompt关键字
             var prompt = (Main.Prompts.FirstOrDefault(x => x.IsEnabled) ?? throw new Exception("请先完善Propmpt配置"));

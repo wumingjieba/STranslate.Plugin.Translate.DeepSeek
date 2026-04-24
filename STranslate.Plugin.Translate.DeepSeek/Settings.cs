@@ -4,11 +4,11 @@ public class Settings
 {
     public string ApiKey { get; set; } = string.Empty;
     public string Url { get; set; } = "https://api.deepseek.com/";
-    public string Model { get; set; } = "deepseek-chat";
+    public string Model { get; set; } = "deepseek-v4-flash";
     public List<string> Models { get; set; } =
     [
-        "deepseek-chat",
-        "deepseek-reasoner",
+        "deepseek-v4-flash",
+        "deepseek-v4-pro",
     ];
     public int MaxTokens { get; set; } = 2048;
     public double Temperature { get; set; } = 0.7;
