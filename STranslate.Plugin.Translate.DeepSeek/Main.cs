@@ -140,10 +140,10 @@ public class Main : LlmTranslatePluginBase
             .Items;
         messages.ToList()
             .ForEach(item =>
-                item.Content = item.Content
+                item. = item.
                 .Replace("$source", sourceStr)
                 .Replace("$target", targetStr)
-                .Replace("$content", request.Text)
+                .Replace("$", request.Text)
                 );
 
         // 温度限定
@@ -158,7 +158,7 @@ public class Main : LlmTranslatePluginBase
             max_tokens = Settings.MaxTokens,
             top_p = Settings.TopP,
             n = Settings.N,
-            stream = Settings.Stream
+            stream = Settings.Stream,
             thinking = new { type = "disabled" } // <--- 关键！显式关闭思考模式
         };
 
