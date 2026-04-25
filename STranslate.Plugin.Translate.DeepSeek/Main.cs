@@ -205,18 +205,18 @@ public class Main : LlmTranslatePluginBase
 
                 #region 针对content内容中含有推理内容的优化
 
-                if (contentValue.Trim() == "<think>")
-                    isThink = true;
-                if (contentValue.Trim() == "</think>")
-                {
-                    isThink = false;
-                    return;
-                }
+              //  if (contentValue.Trim() == "<think>")
+               //     isThink = true;
+               // if (contentValue.Trim() == "</think>")
+               // {
+              //      isThink = false;
+               //     return;
+              //  }
 
-                if (isThink)
-                    return;
+              //  if (isThink)
+              //      return;
 
-                #endregion
+             //   #endregion
 
                 #region 针对推理过后带有换行的情况进行优化
 
