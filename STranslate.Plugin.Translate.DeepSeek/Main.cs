@@ -1,7 +1,12 @@
 using STranslate.Plugin.Translate.DeepSeek.View;
 using STranslate.Plugin.Translate.DeepSeek.ViewModel;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json.Nodes;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 
 namespace STranslate.Plugin.Translate.DeepSeek;
@@ -16,8 +21,6 @@ public class Main : LlmTranslatePluginBase
     public override void SelectPrompt(Prompt? prompt)
     {
         base.SelectPrompt(prompt);
-
-        // 保存到配置
         Settings.Prompts = [.. Prompts.Select(p => p.Clone())];
         Context.SaveSettingStorage<Settings>();
     }
@@ -105,7 +108,6 @@ public class Main : LlmTranslatePluginBase
     {
         Context = context;
         Settings = context.LoadSettingStorage<Settings>();
-
         Settings.Prompts.ForEach(Prompts.Add);
     }
 
@@ -125,18 +127,16 @@ public class Main : LlmTranslatePluginBase
         }
 
         UriBuilder uriBuilder = new(Settings.Url);
-        // 如果路径不是有效的API路径结尾，使用默认路径
         if (uriBuilder.Path == "/")
             uriBuilder.Path = "/chat/completions";
 
-        // 选择模型
         var model = Settings.Model.Trim();
         model = string.IsNullOrEmpty(model) ? "deepseek-v4-flash" : model;
 
-        // 替换Prompt关键字 (这里帮你把误删的代码补回来了！)
         var messages = (Prompts.FirstOrDefault(x => x.IsEnabled) ?? throw new Exception("请先完善Propmpt配置"))
             .Clone()
             .Items;
+            
         messages.ToList()
             .ForEach(item =>
                 item.Content = item.Content
@@ -145,10 +145,8 @@ public class Main : LlmTranslatePluginBase
                 .Replace("$content", request.Text)
                 );
 
-        // 温度限定
         var temperature = Math.Clamp(Settings.Temperature, 0, 2);
 
-        // 构建请求体，包含 extra_body 封印思考模式
         var content = new
         {
             model,
@@ -157,14 +155,9 @@ public class Main : LlmTranslatePluginBase
             max_tokens = Settings.MaxTokens,
             top_p = Settings.TopP,
             n = Settings.N,
-            stream = Settings.Stream,
-            extra_body = new 
-            { 
-                thinking = new { type = "disabled" } 
-            }
+            stream = Settings.Stream
         };
 
-        // 请求头
         var option = new Options
         {
             Headers = new Dictionary<string, string>
@@ -176,57 +169,23 @@ public class Main : LlmTranslatePluginBase
         };
 
         StringBuilder sb = new();
-        var isThink = false;
 
         await Context.HttpService.StreamPostAsync(uriBuilder.Uri.ToString(), content, msg =>
         {
-            if (string.IsNullOrEmpty(msg?.Trim()))
-                return;
-
+            if (string.IsNullOrEmpty(msg?.Trim())) return;
             var preprocessString = msg.Replace("data:", "").Trim();
-
-            // 结束标记
-            if (preprocessString.Equals("[DONE]"))
-                return;
+            if (preprocessString.Equals("[DONE]")) return;
 
             try
             {
-                // 解析JSON数据
                 var parsedData = JsonNode.Parse(preprocessString);
+                if (parsedData is null) return;
 
-                if (parsedData is null)
-                    return;
-
-                // 提取content的值
                 var contentValue = parsedData["choices"]?[0]?["delta"]?["content"]?.ToString();
+                if (string.IsNullOrEmpty(contentValue)) return;
 
-                if (string.IsNullOrEmpty(contentValue))
-                    return;
-
-                #region 针对content内容中含有推理内容的优化
-
-                if (contentValue.Trim() == "<think>")
-                    isThink = true;
-                if (contentValue.Trim() == "</think>")
-                {
-                    isThink = false;
-                    return;
-                }
-
-                if (isThink)
-                    return;
-
-                #endregion
-
-                #region 针对推理过后带有换行的情况进行优化
-
-                if (string.IsNullOrWhiteSpace(sb.ToString()) && string.IsNullOrWhiteSpace(contentValue))
-                    return;
-
+                // 最纯粹的透传，不过滤任何 <think> 标签
                 sb.Append(contentValue);
-
-                #endregion
-
                 result.Text = sb.ToString();
             }
             catch
