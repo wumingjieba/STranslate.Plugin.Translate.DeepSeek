@@ -203,22 +203,6 @@ public class Main : LlmTranslatePluginBase
                 if (string.IsNullOrEmpty(contentValue))
                     return;
 
-                #region 针对content内容中含有推理内容的优化
-
-              //  if (contentValue.Trim() == "<think>")
-               //     isThink = true;
-               // if (contentValue.Trim() == "</think>")
-               // {
-              //      isThink = false;
-               //     return;
-              //  }
-
-              //  if (isThink)
-              //      return;
-
-             //   #endregion
-
-                #region 针对推理过后带有换行的情况进行优化
 
                 if (string.IsNullOrWhiteSpace(sb.ToString()) && string.IsNullOrWhiteSpace(contentValue))
                     return;
