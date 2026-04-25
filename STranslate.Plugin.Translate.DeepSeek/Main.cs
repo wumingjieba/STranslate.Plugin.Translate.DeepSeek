@@ -159,6 +159,7 @@ public class Main : LlmTranslatePluginBase
             top_p = Settings.TopP,
             n = Settings.N,
             stream = Settings.Stream
+            thinking = new { type = "disabled" } // <--- 关键！显式关闭思考模式
         };
 
         // 请求头，使用标准字段名并兼容流式返回
