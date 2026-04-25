@@ -159,7 +159,11 @@ public class Main : LlmTranslatePluginBase
             top_p = Settings.TopP,
             n = Settings.N,
             stream = Settings.Stream,
-            thinking = new { type = "disabled" } // <--- 关键！显式关闭思考模式
+            // 注意：DeepSeek 要求 thinking 放在 extra_body 内部
+            extra_body = new 
+            { 
+                thinking = new { type = "disabled" } 
+            }
         };
 
         // 请求头，使用标准字段名并兼容流式返回
