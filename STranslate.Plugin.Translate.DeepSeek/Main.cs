@@ -208,21 +208,6 @@ public class Main : LlmTranslatePluginBase
                     return;
 
                 sb.Append(contentValue);
-                
-               #region 针对content内容中含有推理内容的优化
-
-                if (contentValue.Trim() == "<think>")
-                    isThink = true;
-                if (contentValue.Trim() == "</think>")
-                {
-                    isThink = false;
-                    return;
-                }
-
-                if (isThink)
-                    return;
-
-                #endregion
 
                 result.Text = sb.ToString();
             }
