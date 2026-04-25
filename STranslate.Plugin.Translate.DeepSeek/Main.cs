@@ -235,3 +235,4 @@ public class Main : LlmTranslatePluginBase
             }
         }, option, cancellationToken: cancellationToken);
     }
+}
