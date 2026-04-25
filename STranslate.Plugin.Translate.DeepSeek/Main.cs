@@ -124,7 +124,6 @@ public class Main : LlmTranslatePluginBase
             return;
         }
 
-
         UriBuilder uriBuilder = new(Settings.Url);
         // 如果路径不是有效的API路径结尾，使用默认路径
         if (uriBuilder.Path == "/")
@@ -134,22 +133,22 @@ public class Main : LlmTranslatePluginBase
         var model = Settings.Model.Trim();
         model = string.IsNullOrEmpty(model) ? "deepseek-v4-flash" : model;
 
-        // 替换Prompt关键字
+        // 替换Prompt关键字 (这里帮你把误删的代码补回来了！)
         var messages = (Prompts.FirstOrDefault(x => x.IsEnabled) ?? throw new Exception("请先完善Propmpt配置"))
             .Clone()
             .Items;
         messages.ToList()
             .ForEach(item =>
-                item. = item.
+                item.Content = item.Content
                 .Replace("$source", sourceStr)
                 .Replace("$target", targetStr)
-                .Replace("$", request.Text)
+                .Replace("$content", request.Text)
                 );
 
         // 温度限定
         var temperature = Math.Clamp(Settings.Temperature, 0, 2);
 
-        // 构建请求体，参考 DeepSeek API 文档，包含常用参数
+        // 构建请求体，包含 extra_body 封印思考模式
         var content = new
         {
             model,
@@ -159,14 +158,13 @@ public class Main : LlmTranslatePluginBase
             top_p = Settings.TopP,
             n = Settings.N,
             stream = Settings.Stream,
-            // 注意：DeepSeek 要求 thinking 放在 extra_body 内部
             extra_body = new 
             { 
                 thinking = new { type = "disabled" } 
             }
         };
 
-        // 请求头，使用标准字段名并兼容流式返回
+        // 请求头
         var option = new Options
         {
             Headers = new Dictionary<string, string>
@@ -193,23 +191,6 @@ public class Main : LlmTranslatePluginBase
 
             try
             {
-                /**
-                 * 
-                 * var parsedData = JsonDocument.Parse(preprocessString);
-
-                if (parsedData is null)
-                    return;
-
-                var root = parsedData.RootElement;
-
-                // 提取 content 的值
-                var contentValue = root
-                    .GetProperty("choices")[0]
-                    .GetProperty("delta")
-                    .GetProperty("content")
-                    .GetString();
-                * 
-                 */
                 // 解析JSON数据
                 var parsedData = JsonNode.Parse(preprocessString);
 
@@ -222,12 +203,6 @@ public class Main : LlmTranslatePluginBase
                 if (string.IsNullOrEmpty(contentValue))
                     return;
 
-                /***********************************************************************
-                 * 推理模型思考内容
-                 * 1. content字段内：Groq（推理后带有换行）(兼容think标签还带有换行情况)
-                 * 2. reasoning_content字段内：DeepSeek、硅基流动（推理后带有换行）、第三方服务商
-                 ************************************************************************/
-
                 #region 针对content内容中含有推理内容的优化
 
                 if (contentValue.Trim() == "<think>")
@@ -235,7 +210,6 @@ public class Main : LlmTranslatePluginBase
                 if (contentValue.Trim() == "</think>")
                 {
                     isThink = false;
-                    // 跳过当前内容
                     return;
                 }
 
@@ -246,7 +220,6 @@ public class Main : LlmTranslatePluginBase
 
                 #region 针对推理过后带有换行的情况进行优化
 
-                // 优化推理模型思考结束后的\n\n符号
                 if (string.IsNullOrWhiteSpace(sb.ToString()) && string.IsNullOrWhiteSpace(contentValue))
                     return;
 
@@ -259,9 +232,6 @@ public class Main : LlmTranslatePluginBase
             catch
             {
                 // Ignore
-                // * 适配OpenRouter等第三方服务流数据中包含与DeepSeek官方API中不同的数据
-                // * 如 ": OPENROUTER PROCESSING"
             }
-        },option , cancellationToken: cancellationToken);
+        }, option, cancellationToken: cancellationToken);
     }
-}
